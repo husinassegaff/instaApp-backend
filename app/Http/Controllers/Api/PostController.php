@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
 use App\Services\PostService;
 use Illuminate\Http\JsonResponse;
@@ -51,16 +53,13 @@ class PostController extends Controller
     /**
      * Store a newly created post
      *
-     * @param Request $request
+     * @param StorePostRequest $request
      * @return JsonResponse
      */
-    public function store(Request $request): JsonResponse
+    public function store(StorePostRequest $request): JsonResponse
     {
-        // TODO Phase 7: Replace with StorePostRequest
-        $validated = $request->validate([
-            'caption' => 'nullable|string|max:2200',
-            'image' => 'required|string', // Base64 image
-        ]);
+        // Validation handled by StorePostRequest (Single Responsibility Principle)
+        $validated = $request->validated();
 
         try {
             // Use PostService for business logic (includes validation and logging)
@@ -100,25 +99,17 @@ class PostController extends Controller
     /**
      * Update the specified post
      *
-     * @param Request $request
+     * @param UpdatePostRequest $request
      * @param Post $post
      * @return JsonResponse
      */
-    public function update(Request $request, Post $post): JsonResponse
+    public function update(UpdatePostRequest $request, Post $post): JsonResponse
     {
-        // TODO Phase 9: Replace with Policy authorization
-        // Check if user owns the post
-        if ($post->user_id !== $request->user()->id) {
-            return response()->json([
-                'message' => 'Unauthorized. You can only update your own posts.',
-            ], 403);
-        }
+        // Authorization handled by PostPolicy (Single Responsibility Principle)
+        $this->authorize('update', $post);
 
-        // TODO Phase 7: Replace with UpdatePostRequest
-        $validated = $request->validate([
-            'caption' => 'nullable|string|max:2200',
-            'image' => 'nullable|string', // Base64 image
-        ]);
+        // Validation handled by UpdatePostRequest
+        $validated = $request->validated();
 
         try {
             // Use PostService for business logic (includes validation and logging)
@@ -140,19 +131,13 @@ class PostController extends Controller
     /**
      * Remove the specified post
      *
-     * @param Request $request
      * @param Post $post
      * @return JsonResponse
      */
-    public function destroy(Request $request, Post $post): JsonResponse
+    public function destroy(Post $post): JsonResponse
     {
-        // TODO Phase 9: Replace with Policy authorization
-        // Check if user owns the post
-        if ($post->user_id !== $request->user()->id) {
-            return response()->json([
-                'message' => 'Unauthorized. You can only delete your own posts.',
-            ], 403);
-        }
+        // Authorization handled by PostPolicy (Single Responsibility Principle)
+        $this->authorize('delete', $post);
 
         // Use PostService for business logic (includes logging)
         $this->postService->deletePost($post);
