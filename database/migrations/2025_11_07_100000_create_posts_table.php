@@ -13,13 +13,14 @@ return new class extends Migration
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id'); // FK handled at model level
             $table->text('caption')->nullable();
             $table->longText('image'); // base64 image storage
             $table->timestamps();
 
             // Indexes for performance
-            $table->index(['user_id', 'created_at']);
+            $table->index('user_id');
+            $table->index('created_at');
         });
     }
 
