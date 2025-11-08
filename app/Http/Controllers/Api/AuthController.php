@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Models\User;
 use App\Services\ActivityLoggerService;
 use App\Services\AuthService;
@@ -31,17 +33,13 @@ class AuthController extends Controller
     /**
      * Register a new user
      *
-     * @param Request $request
+     * @param RegisterRequest $request
      * @return JsonResponse
      */
-    public function register(Request $request): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        // TODO Phase 7: Replace with RegisterRequest (Single Responsibility Principle)
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        // Validation handled by RegisterRequest (Single Responsibility Principle)
+        $validated = $request->validated();
 
         // Use AuthService for business logic
         $user = $this->authService->register($validated);
@@ -65,16 +63,13 @@ class AuthController extends Controller
     /**
      * Login user and return token
      *
-     * @param Request $request
+     * @param LoginRequest $request
      * @return JsonResponse
      */
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        // TODO Phase 7: Replace with LoginRequest
-        $validated = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
+        // Validation handled by LoginRequest (Single Responsibility Principle)
+        $validated = $request->validated();
 
         // Use AuthService for business logic (handles validation, email verification check, logging)
         $result = $this->authService->login($validated);
