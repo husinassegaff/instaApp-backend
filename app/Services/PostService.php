@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -32,7 +34,7 @@ class PostService
      */
     public function getAllPosts(int $perPage = 15): LengthAwarePaginator
     {
-        return Post::with(['user'])
+        return Post::with(['user', 'likes'])
             ->withCount(['likes', 'comments'])
             ->latest()
             ->paginate($perPage);
@@ -44,36 +46,46 @@ class PostService
      * @param User $user
      * @param array $data Validated post data
      * @return Post
-     * @throws ValidationException
+     * @throws \Exception
      */
     public function createPost(User $user, array $data): Post
     {
-        // Validate base64 image format
-        if (! $this->isValidBase64Image($data['image'])) {
-            throw ValidationException::withMessages([
-                'image' => ['Invalid base64 image format. Please provide a valid base64 encoded image.'],
-            ]);
-        }
-
-        // Create post
-        $post = Post::create([
+        Log::info('PostService: Starting post creation', [
             'user_id' => $user->id,
-            'caption' => $data['caption'] ?? null,
-            'image' => $data['image'],
+            'has_caption' => !empty($data['caption']),
+            'image_length' => strlen($data['image']),
         ]);
 
-        // Load user relationship
-        $post->load('user');
+        return DB::transaction(function () use ($user, $data) {
+            // Create post
+            $post = Post::create([
+                'user_id' => $user->id,
+                'caption' => $data['caption'] ?? null,
+                'image' => $data['image'],
+            ]);
 
-        // Log activity
-        $this->activityLogger->log(
-            user: $user,
-            logName: 'post',
-            description: 'Created a new post',
-            subject: $post
-        );
+            if (!$post) {
+                Log::error('PostService: Failed to create post in database');
+                throw new \RuntimeException('Failed to create post in database');
+            }
 
-        return $post;
+            Log::info('PostService: Post created successfully', ['post_id' => $post->id]);
+
+            // Load user relationship
+            $post->load('user');
+
+            // Log activity
+            $this->activityLogger->log(
+                user: $user,
+                logName: 'post',
+                description: 'Created a new post',
+                subject: $post
+            );
+
+            Log::info('PostService: Activity logged successfully', ['post_id' => $post->id]);
+
+            return $post;
+        });
     }
 
     /**
@@ -82,33 +94,37 @@ class PostService
      * @param Post $post
      * @param array $data Validated post data
      * @return Post
-     * @throws ValidationException
+     * @throws \Exception
      */
     public function updatePost(Post $post, array $data): Post
     {
-        // Validate base64 image if provided
-        if (isset($data['image']) && ! $this->isValidBase64Image($data['image'])) {
-            throw ValidationException::withMessages([
-                'image' => ['Invalid base64 image format. Please provide a valid base64 encoded image.'],
-            ]);
-        }
+        Log::info('PostService: Starting post update', [
+            'post_id' => $post->id,
+            'updated_fields' => array_keys($data),
+        ]);
 
-        // Update post
-        $post->update($data);
+        return DB::transaction(function () use ($post, $data) {
+            // Update post
+            $post->update($data);
 
-        // Reload user relationship
-        $post->load('user');
+            Log::info('PostService: Post updated successfully', ['post_id' => $post->id]);
 
-        // Log activity
-        $this->activityLogger->log(
-            user: $post->user,
-            logName: 'post',
-            description: 'Updated post',
-            subject: $post,
-            properties: ['updated_fields' => array_keys($data)]
-        );
+            // Reload user relationship
+            $post->load('user');
 
-        return $post;
+            // Log activity
+            $this->activityLogger->log(
+                user: $post->user,
+                logName: 'post',
+                description: 'Updated post',
+                subject: $post,
+                properties: ['updated_fields' => array_keys($data)]
+            );
+
+            Log::info('PostService: Activity logged for update', ['post_id' => $post->id]);
+
+            return $post;
+        });
     }
 
     /**
@@ -122,6 +138,8 @@ class PostService
         $user = $post->user;
         $postId = $post->id;
 
+        Log::info('PostService: Deleting post', ['post_id' => $postId]);
+
         // Delete the post
         $deleted = $post->delete();
 
@@ -134,24 +152,8 @@ class PostService
             properties: ['post_id' => $postId]
         );
 
+        Log::info('PostService: Post deleted successfully', ['post_id' => $postId]);
+
         return $deleted;
-    }
-
-    /**
-     * Validate base64 image format
-     *
-     * @param string $base64String
-     * @return bool
-     */
-    private function isValidBase64Image(string $base64String): bool
-    {
-        // Check if string contains valid base64 image data
-        if (preg_match('/^data:image\/(\w+);base64,/', $base64String, $matches)) {
-            // Valid image types
-            $allowedTypes = ['jpeg', 'jpg', 'png', 'gif', 'webp'];
-            return in_array(strtolower($matches[1]), $allowedTypes);
-        }
-
-        return false;
     }
 }
