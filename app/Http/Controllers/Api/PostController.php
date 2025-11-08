@@ -38,7 +38,7 @@ class PostController extends Controller
         // Use PostService for business logic
         $posts = $this->postService->getAllPosts();
 
-        // TODO Phase 10: Use PostResource::collection()
+        // TODO Use PostResource::collection()
         return response()->json([
             'posts' => $posts->items(),
             'pagination' => [
@@ -65,7 +65,7 @@ class PostController extends Controller
             // Use PostService for business logic (includes validation and logging)
             $post = $this->postService->createPost($request->user(), $validated);
 
-            // TODO Phase 10: Use PostResource
+            // TODO Use PostResource
             return response()->json([
                 'message' => 'Post created successfully.',
                 'post' => $post,
@@ -90,7 +90,7 @@ class PostController extends Controller
         $post->load(['user', 'comments.user'])
             ->loadCount(['likes', 'comments']);
 
-        // TODO Phase 10: Use PostResource
+        // TODO Use PostResource
         return response()->json([
             'post' => $post,
         ], 200);
@@ -115,7 +115,7 @@ class PostController extends Controller
             // Use PostService for business logic (includes validation and logging)
             $post = $this->postService->updatePost($post, $validated);
 
-            // TODO Phase 10: Use PostResource
+            // TODO Use PostResource
             return response()->json([
                 'message' => 'Post updated successfully.',
                 'post' => $post,

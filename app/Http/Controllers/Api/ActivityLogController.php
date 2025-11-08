@@ -27,7 +27,7 @@ class ActivityLogController extends Controller
             ->latest()
             ->paginate(20);
 
-        // TODO Phase 10: Use ActivityLogResource::collection()
+        // TODO Use ActivityLogResource::collection()
         return response()->json([
             'activity_logs' => $logs->items(),
             'pagination' => [

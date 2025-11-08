@@ -47,7 +47,7 @@ class AuthController extends Controller
         // Generate Sanctum token
         $token = $user->createToken('api-token')->plainTextToken;
 
-        // TODO Phase 10: Use UserResource for transformation
+        // TODO Use UserResource for transformation
         return response()->json([
             'message' => 'Registration successful. Please verify your email.',
             'user' => [
@@ -74,7 +74,7 @@ class AuthController extends Controller
         // Use AuthService for business logic (handles validation, email verification check, logging)
         $result = $this->authService->login($validated);
 
-        // TODO Phase 10: Use UserResource
+        // TODO Use UserResource
         return response()->json([
             'message' => 'Login successful.',
             'user' => [
@@ -171,7 +171,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        // TODO Phase 10: Use UserResource
+        // TODO Use UserResource
         return response()->json([
             'user' => [
                 'id' => $user->id,

@@ -38,7 +38,7 @@ class CommentController extends Controller
         // Use CommentService for business logic
         $comments = $this->commentService->getComments($post);
 
-        // TODO Phase 10: Use CommentResource::collection()
+        // TODO Use CommentResource::collection()
         return response()->json([
             'comments' => $comments,
         ], 200);
@@ -63,7 +63,7 @@ class CommentController extends Controller
             $validated['content']
         );
 
-        // TODO Phase 10: Use CommentResource
+        // TODO Use CommentResource
         return response()->json([
             'message' => 'Comment added successfully.',
             'comment' => $comment,
@@ -88,7 +88,7 @@ class CommentController extends Controller
         // Use CommentService for business logic (includes logging)
         $comment = $this->commentService->updateComment($comment, $validated['content']);
 
-        // TODO Phase 10: Use CommentResource
+        // TODO Use CommentResource
         return response()->json([
             'message' => 'Comment updated successfully.',
             'comment' => $comment,
