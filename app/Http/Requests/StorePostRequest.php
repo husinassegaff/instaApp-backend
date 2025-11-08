@@ -23,7 +23,23 @@ class StorePostRequest extends FormRequest
     {
         return [
             'caption' => 'nullable|string|max:2200',
-            'image' => 'required|string',
+            'image' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    // Validate base64 image format
+                    if (!preg_match('/^data:image\/(\w+);base64,/', $value, $matches)) {
+                        $fail('The image must be a valid base64 encoded image.');
+                        return;
+                    }
+
+                    // Validate image type
+                    $allowedTypes = ['jpeg', 'jpg', 'png', 'gif', 'webp'];
+                    if (!in_array(strtolower($matches[1]), $allowedTypes)) {
+                        $fail('The image type must be one of: jpeg, jpg, png, gif, webp.');
+                    }
+                },
+            ],
         ];
     }
 }
