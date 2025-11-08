@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCommentRequest;
+use App\Http\Requests\UpdateCommentRequest;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Services\CommentService;
@@ -45,16 +47,14 @@ class CommentController extends Controller
     /**
      * Store a new comment
      *
-     * @param Request $request
+     * @param StoreCommentRequest $request
      * @param Post $post
      * @return JsonResponse
      */
-    public function store(Request $request, Post $post): JsonResponse
+    public function store(StoreCommentRequest $request, Post $post): JsonResponse
     {
-        // TODO Phase 7: Replace with StoreCommentRequest
-        $validated = $request->validate([
-            'content' => 'required|string|max:500',
-        ]);
+        // Validation handled by StoreCommentRequest (Single Responsibility Principle)
+        $validated = $request->validated();
 
         // Use CommentService for business logic (includes logging)
         $comment = $this->commentService->createComment(
@@ -73,24 +73,17 @@ class CommentController extends Controller
     /**
      * Update a comment
      *
-     * @param Request $request
+     * @param UpdateCommentRequest $request
      * @param Comment $comment
      * @return JsonResponse
      */
-    public function update(Request $request, Comment $comment): JsonResponse
+    public function update(UpdateCommentRequest $request, Comment $comment): JsonResponse
     {
-        // TODO Phase 9: Replace with Policy authorization
-        // Check if user owns the comment
-        if ($comment->user_id !== $request->user()->id) {
-            return response()->json([
-                'message' => 'Unauthorized. You can only update your own comments.',
-            ], 403);
-        }
+        // Authorization handled by CommentPolicy (Single Responsibility Principle)
+        $this->authorize('update', $comment);
 
-        // TODO Phase 7: Replace with UpdateCommentRequest
-        $validated = $request->validate([
-            'content' => 'required|string|max:500',
-        ]);
+        // Validation handled by UpdateCommentRequest
+        $validated = $request->validated();
 
         // Use CommentService for business logic (includes logging)
         $comment = $this->commentService->updateComment($comment, $validated['content']);
@@ -105,19 +98,13 @@ class CommentController extends Controller
     /**
      * Delete a comment
      *
-     * @param Request $request
      * @param Comment $comment
      * @return JsonResponse
      */
-    public function destroy(Request $request, Comment $comment): JsonResponse
+    public function destroy(Comment $comment): JsonResponse
     {
-        // TODO Phase 9: Replace with Policy authorization
-        // Check if user owns the comment
-        if ($comment->user_id !== $request->user()->id) {
-            return response()->json([
-                'message' => 'Unauthorized. You can only delete your own comments.',
-            ], 403);
-        }
+        // Authorization handled by CommentPolicy (Single Responsibility Principle)
+        $this->authorize('delete', $comment);
 
         // Use CommentService for business logic (includes logging)
         $this->commentService->deleteComment($comment);
