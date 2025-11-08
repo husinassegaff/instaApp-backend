@@ -20,6 +20,9 @@ use App\Http\Controllers\Web\ActivityLogController;
 
 // Public / Guest Routes
 Route::get('/', function () {
+    if (auth()->check() && auth()->user()->hasVerifiedEmail()) {
+        return redirect()->route('feed');
+    }
     return view('welcome');
 })->name('home');
 
@@ -32,6 +35,10 @@ Route::middleware('guest')->group(function () {
 });
 
 // Email Verification Routes
+Route::get('/email/verify', [AuthController::class, 'verificationNotice'])
+    ->middleware('auth')
+    ->name('verification.notice');
+
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verify'])
     ->middleware(['auth', 'signed'])
     ->name('verification.verify');
@@ -40,8 +47,8 @@ Route::post('/email/verification-notification', [AuthController::class, 'resend'
     ->middleware(['auth', 'throttle:6,1'])
     ->name('verification.send');
 
-// Authenticated Routes
-Route::middleware(['auth'])->group(function () {
+// Authenticated Routes (Requires Email Verification)
+Route::middleware(['auth', 'verified'])->group(function () {
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -52,10 +59,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('posts', PostController::class);
 
     // User Profile
-    Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile');
-    Route::get('/profile/{user}/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile/{user}', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Activity Logs
-    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('/activity', [ActivityLogController::class, 'index'])->name('activity.index');
 });
