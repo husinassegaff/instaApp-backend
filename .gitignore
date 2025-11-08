@@ -1,0 +1,52 @@
+# Laravel .gitignore
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Environment files
+.env
+.env.backup
+.env.production
+.env.*.local
+
+# Laravel specific
+.phpunit.cache
+.php-cs-fixer.cache
+.phpunit.result.cache
+
+# Build artifacts
+/public/build/
+/public/hot
+/public/storage
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+
+# Testing
+.phpunit.result.cache
+coverage/
+
+# Auth
+auth.json
